@@ -4,17 +4,23 @@ import (
 	"math"
 )
 
-type Orientation struct {
-	q0 float64
-	q1 float64
-	q2 float64
-	q3 float64
+type EulerAngles struct {
+	Roll  float64
+	Pitch float64
+	Yaw   float64
 }
 
-func (o Orientation) getAsEuler() (float64, float64, float64) {
-	roll := math.Atan2(2*(o.q0*o.q1+o.q2*o.q3), 1-2*(o.q1*o.q1+o.q2*o.q2))
-	pitch := math.Asin(2.0 * (o.q0*o.q2 - o.q3*o.q1))
-	yaw := math.Atan2(2*(o.q1*o.q2+o.q0*o.q3), 1-2*(o.q2*o.q2+o.q3*o.q3))
+type Orientation struct {
+	Q0 float64
+	Q1 float64
+	Q2 float64
+	Q3 float64
+}
 
-	return roll, pitch, yaw
+func (o Orientation) getAsEuler() EulerAngles {
+	roll := math.Atan2(2*(o.Q0*o.Q1+o.Q2*o.Q3), 1-2*(o.Q1*o.Q1+o.Q2*o.Q2))
+	pitch := math.Asin(2.0 * (o.Q0*o.Q2 - o.Q3*o.Q1))
+	yaw := math.Atan2(2*(o.Q1*o.Q2+o.Q0*o.Q3), 1-2*(o.Q2*o.Q2+o.Q3*o.Q3))
+
+	return EulerAngles{Roll: roll, Pitch: pitch, Yaw: yaw}
 }
