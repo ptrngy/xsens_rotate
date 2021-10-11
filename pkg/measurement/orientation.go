@@ -17,7 +17,7 @@ type Orientation struct {
 	Q3 float64
 }
 
-func (o Orientation) getAsEuler() EulerAngles {
+func (o Orientation) GetAsEuler() EulerAngles {
 	roll := math.Atan2(2*(o.Q0*o.Q1+o.Q2*o.Q3), 1-2*(o.Q1*o.Q1+o.Q2*o.Q2))
 	pitch := math.Asin(2.0 * (o.Q0*o.Q2 - o.Q3*o.Q1))
 	yaw := math.Atan2(2*(o.Q1*o.Q2+o.Q0*o.Q3), 1-2*(o.Q2*o.Q2+o.Q3*o.Q3))

@@ -23,7 +23,7 @@ func NewMagnetometer(x, y, z float64) *Magnetometer {
 
 // GetRotated rotates the magnetic coords reading to magnetic north.
 func (m *Magnetometer) GetRotated(o Orientation) (float64, float64, float64) {
-	e := o.getAsEuler()
+	e := o.GetAsEuler()
 
 	ny, nz := rotateX(m.Y, m.Z, e.Roll)
 	nx, nz := rotateY(m.X, nz, e.Pitch)

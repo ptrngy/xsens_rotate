@@ -15,6 +15,7 @@ type XSensLogParser struct {
 	Header         []string
 	Magneto        []measurement.Magnetometer
 	Ori            []measurement.Orientation
+	EulerFromQuat  []measurement.EulerAngles
 	EulerOri       []measurement.EulerAngles
 	RotatedMagneto []measurement.Magnetometer
 }
@@ -26,6 +27,7 @@ func NewXSensLogParser(path string) *XSensLogParser {
 		Header:         make([]string, 0),
 		Magneto:        make([]measurement.Magnetometer, 0),
 		Ori:            make([]measurement.Orientation, 0),
+		EulerFromQuat:  make([]measurement.EulerAngles, 0),
 		EulerOri:       make([]measurement.EulerAngles, 0),
 		RotatedMagneto: make([]measurement.Magnetometer, 0),
 	}
@@ -112,6 +114,7 @@ func (x *XSensLogParser) Parse() (err error) {
 
 					o := measurement.Orientation{Q0: q0, Q1: q1, Q2: q2, Q3: q3}
 					x.Ori = append(x.Ori, o)
+					x.EulerFromQuat = append(x.EulerFromQuat, o.GetAsEuler())
 
 					roll, err := strconv.ParseFloat(chunks[eulerStartIdx], 64)
 					if err != nil {
