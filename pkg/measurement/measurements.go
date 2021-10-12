@@ -4,15 +4,15 @@ import (
 	"math"
 )
 
-type Magnetometer struct {
+type Vector3D struct {
 	X float64
 	Y float64
 	Z float64
 }
 
 // NewMagnetometer creates a new Magnetometer and returns its pointer.
-func NewMagnetometer(x, y, z float64) *Magnetometer {
-	m := new(Magnetometer)
+func NewMagnetometer(x, y, z float64) *Vector3D {
+	m := new(Vector3D)
 
 	m.X = x
 	m.Y = y
@@ -21,8 +21,8 @@ func NewMagnetometer(x, y, z float64) *Magnetometer {
 	return m
 }
 
-// GetRotated rotates the magnetic coords reading to magnetic north.
-func (m *Magnetometer) GetRotated(o Orientation) (float64, float64, float64) {
+// GetRotated rotates the coords reading to magnetic north.
+func (m *Vector3D) GetRotated(o Quaternion) (float64, float64, float64) {
 	e := o.GetAsEuler()
 
 	ny, nz := rotateX(m.Y, m.Z, e.Roll)
@@ -30,6 +30,36 @@ func (m *Magnetometer) GetRotated(o Orientation) (float64, float64, float64) {
 	nx, ny = rotateZ(nx, ny, e.Yaw)
 
 	return nx, ny, nz
+}
+
+// GetRotatedEuler rotates the coords reading to magnetic north based on given Euler angles.
+func (m *Vector3D) GetRotatedEuler(e EulerAngles) (float64, float64, float64) {
+	ny, nz := rotateX(m.Y, m.Z, e.Roll)
+	nx, nz := rotateY(m.X, nz, e.Pitch)
+	nx, ny = rotateZ(nx, ny, e.Yaw)
+
+	return nx, ny, nz
+}
+
+// IsEmpty checks if given vector is (0.0, 0.0, 0.0)
+func (m Vector3D) IsEmpty() bool {
+	if m.X == 0.0 && m.Y == 0.0 && m.Z == 0.0 {
+		return true
+	}
+
+	return false
+}
+
+// Scale is used to scale all dimension of a vector
+func (m *Vector3D) Scale(factor float64) {
+	m.X = factor * m.X
+	m.Y = factor * m.Y
+	m.Z = factor * m.Z
+}
+
+// SquareSum return the sum of squared components
+func (m Vector3D) SquareSum() float64 {
+	return math.Pow(m.X, 2) + math.Pow(m.Y, 2) + math.Pow(m.Z, 2)
 }
 
 // Rotates the point around the X axis by the given angle in radians.
