@@ -40,6 +40,17 @@ func FastInvSqrt64(n float64) float64 {
 	return f
 }
 
+//ApplyPrewarm prewarms the filter with a subset of the data
+func (m *MadgwickAHRS) ApplyPrewarm(gyro, accelero, magneto []measurement.Vector3D) {
+	repeats := 1000 / int(len(gyro))
+
+	for i := 0; i < repeats+1; i++ {
+		for j := 0; j < len(gyro); j++ {
+			m.Update(gyro[j], accelero[j], magneto[j])
+		}
+	}
+}
+
 // Update is used to update the quaternion if 9DOF is used
 func (m *MadgwickAHRS) Update(gyro, accelero, magneto measurement.Vector3D) {
 	if magneto.IsEmpty() {

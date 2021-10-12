@@ -22,23 +22,23 @@ func NewMagnetometer(x, y, z float64) *Vector3D {
 }
 
 // GetRotated rotates the coords reading to magnetic north.
-func (m *Vector3D) GetRotated(o Quaternion) (float64, float64, float64) {
+func (m *Vector3D) GetRotated(o Quaternion) Vector3D {
 	e := o.GetAsEuler()
 
 	ny, nz := rotateX(m.Y, m.Z, e.Roll)
 	nx, nz := rotateY(m.X, nz, e.Pitch)
 	nx, ny = rotateZ(nx, ny, e.Yaw)
 
-	return nx, ny, nz
+	return Vector3D{X: nx, Y: ny, Z: nz}
 }
 
 // GetRotatedEuler rotates the coords reading to magnetic north based on given Euler angles.
-func (m *Vector3D) GetRotatedEuler(e EulerAngles) (float64, float64, float64) {
+func (m *Vector3D) GetRotatedEuler(e EulerAngles) Vector3D {
 	ny, nz := rotateX(m.Y, m.Z, e.Roll)
 	nx, nz := rotateY(m.X, nz, e.Pitch)
 	nx, ny = rotateZ(nx, ny, e.Yaw)
 
-	return nx, ny, nz
+	return Vector3D{X: nx, Y: ny, Z: nz}
 }
 
 // IsEmpty checks if given vector is (0.0, 0.0, 0.0)

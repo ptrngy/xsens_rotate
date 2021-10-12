@@ -120,10 +120,16 @@ func plotAngles(slice []measurement.EulerAngles, name string) {
 	plot.SavePlot("output/" + name + ".png")
 }
 
-func (x *XSensVisualizer) PlotBasics() {
+func (x XSensVisualizer) PlotBasics() {
 	plotVector3D(x.Parser.Accelero, "accelero")
 	plotVector3D(x.Parser.Gyro, "gyro")
 	plotVector3D(x.Parser.Magneto, "magneto")
 	plotVector3D(x.Parser.RotatedMagneto, "rotmagneto")
 	plotAngles(x.Parser.EulerOri, "fromchip")
+}
+
+func (x XSensVisualizer) PlotIMURotated() {
+	plotAngles(x.Parser.IMUOri, "imuangles")
+	plotVector3D(x.Parser.IMURotatedMagneto, "imurotmagneto")
+	plotVector3D(x.Parser.WarmRotatedMagneto, "prewarmmagneto")
 }

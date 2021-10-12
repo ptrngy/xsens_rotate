@@ -34,6 +34,10 @@ func main() {
 
 	fmt.Println("Processed ", len(c.Parser.Magneto), " measurements")
 
+	c.Parser.CalculateIMUAngles()
+	c.Parser.CalculateRotMagnetoWithPrewarm()
+
 	c.Visualizer = *visualizer.NewXSensVisualizer(c.Parser)
 	c.Visualizer.PlotBasics()
+	c.Visualizer.PlotIMURotated()
 }

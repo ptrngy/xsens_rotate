@@ -8,29 +8,36 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/ptrngy/xsens_rotate/pkg/imu"
 	"github.com/ptrngy/xsens_rotate/pkg/measurement"
 )
 
 type XSensLogParser struct {
-	Path           string
-	Header         []string
-	Accelero       []measurement.Vector3D
-	Gyro           []measurement.Vector3D
-	Magneto        []measurement.Vector3D
-	EulerOri       []measurement.EulerAngles
-	RotatedMagneto []measurement.Vector3D
+	Path               string
+	Header             []string
+	Accelero           []measurement.Vector3D
+	Gyro               []measurement.Vector3D
+	Magneto            []measurement.Vector3D
+	EulerOri           []measurement.EulerAngles
+	RotatedMagneto     []measurement.Vector3D
+	IMUOri             []measurement.EulerAngles
+	IMURotatedMagneto  []measurement.Vector3D
+	WarmRotatedMagneto []measurement.Vector3D
 }
 
 // NewXSensLogParser is the constructor.
 func NewXSensLogParser(path string) *XSensLogParser {
 	x := XSensLogParser{
-		Path:           path,
-		Header:         make([]string, 0),
-		Accelero:       make([]measurement.Vector3D, 0),
-		Gyro:           make([]measurement.Vector3D, 0),
-		Magneto:        make([]measurement.Vector3D, 0),
-		EulerOri:       make([]measurement.EulerAngles, 0),
-		RotatedMagneto: make([]measurement.Vector3D, 0),
+		Path:               path,
+		Header:             make([]string, 0),
+		Accelero:           make([]measurement.Vector3D, 0),
+		Gyro:               make([]measurement.Vector3D, 0),
+		Magneto:            make([]measurement.Vector3D, 0),
+		EulerOri:           make([]measurement.EulerAngles, 0),
+		RotatedMagneto:     make([]measurement.Vector3D, 0),
+		IMUOri:             make([]measurement.EulerAngles, 0),
+		IMURotatedMagneto:  make([]measurement.Vector3D, 0),
+		WarmRotatedMagneto: make([]measurement.Vector3D, 0),
 	}
 
 	return &x
@@ -176,14 +183,52 @@ func (x *XSensLogParser) Parse() (err error) {
 					}
 					x.EulerOri = append(x.EulerOri, e)
 
-					nx, ny, nz := m.GetRotatedEuler(e)
-					x.RotatedMagneto = append(x.RotatedMagneto, measurement.Vector3D{X: nx, Y: ny, Z: nz})
+					rotated_m := m.GetRotatedEuler(e)
+					x.RotatedMagneto = append(x.RotatedMagneto, rotated_m)
 				}
 			}
 		}
 	}
 
 	return err
+}
+
+// CalculateIMUAngles uses software imu filter to calculate the euler angles
+func (x *XSensLogParser) CalculateIMUAngles() {
+	imufilter := imu.NewMadgwickAHRS(100.0, 2.0)
+
+	for idx := range x.Accelero {
+		imufilter.Update(x.Gyro[idx], x.Accelero[idx], x.Magneto[idx])
+		rotated_magneto := x.Magneto[idx].GetRotated(imufilter.Quaternion)
+		x.IMURotatedMagneto = append(x.IMURotatedMagneto, rotated_magneto)
+		x.IMUOri = append(x.IMUOri, imufilter.Quaternion.GetAsEuler())
+	}
+}
+
+func MinOf(vars ...int) int {
+	min := vars[0]
+
+	for _, i := range vars {
+		if min > i {
+			min = i
+		}
+	}
+
+	return min
+}
+
+// CalculateRotMagnetoWithPrewarm uses software imu filter with additional prewarming to calculate the rotated magneto
+func (x *XSensLogParser) CalculateRotMagnetoWithPrewarm() {
+	imufilter := imu.NewMadgwickAHRS(100.0, 2.0)
+
+	prewarmsize := MinOf(20, len(x.Accelero), len(x.Magneto), len(x.Gyro))
+	imufilter.ApplyPrewarm(x.Gyro[0:prewarmsize], x.Accelero[0:prewarmsize], x.Magneto[0:prewarmsize])
+
+	for idx := range x.Accelero {
+		imufilter.Update(x.Gyro[idx], x.Accelero[idx], x.Magneto[idx])
+		rotated_magneto := x.Magneto[idx].GetRotated(imufilter.Quaternion)
+		x.WarmRotatedMagneto = append(x.WarmRotatedMagneto, rotated_magneto)
+	}
 }
 
 func indexOf(element string, data []string) int {
